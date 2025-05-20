@@ -1,5 +1,15 @@
-import face_recognition
-import cv2
+import subprocess
+import sys
+
+# Auto-install required packages
+try:
+    import face_recognition
+    import cv2
+except ImportError:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "face_recognition", "opencv-python"])
+    import face_recognition
+    import cv2
+
 import os
 
 # Create folders if they don't exist
@@ -7,18 +17,11 @@ os.makedirs('output', exist_ok=True)
 os.makedirs('failed', exist_ok=True)
 
 def detect_faces(image_path):
-    """
-    Detects faces in an image and returns the locations of the faces.
-    """
     image = face_recognition.load_image_file(image_path)
     face_locations = face_recognition.face_locations(image)
     return face_locations
 
 def draw_rectangles_and_save(image_path, face_locations, output_path):
-    """
-    Crops around the detected face with margin, but ensures the crop
-    covers at least 50% of the original image area, then resizes to 512x512.
-    """
     image = cv2.imread(image_path)
     height, width = image.shape[:2]
     orig_area = height * width
@@ -29,11 +32,9 @@ def draw_rectangles_and_save(image_path, face_locations, output_path):
         face_width = right - left
         face_height = bottom - top
 
-        # Margin: 50% of face size
         margin_x = int(face_width * 0.5)
         margin_y = int(face_height * 0.5)
 
-        # Initial crop coords with margin
         new_left = max(0, left - margin_x)
         new_top = max(0, top - margin_y)
         new_right = min(width, right + margin_x)
@@ -43,13 +44,11 @@ def draw_rectangles_and_save(image_path, face_locations, output_path):
         crop_height = new_bottom - new_top
         crop_area = crop_width * crop_height
 
-        # Minimum crop area to be at least 50% of original image
         min_area = orig_area * 0.5
 
-        # If crop area too small, expand the crop centered on current crop
         if crop_area < min_area:
             target_area = min_area
-            target_side = int(target_area ** 0.5)  # square approx
+            target_side = int(target_area ** 0.5)
 
             center_x = new_left + crop_width // 2
             center_y = new_top + crop_height // 2
@@ -68,7 +67,6 @@ def draw_rectangles_and_save(image_path, face_locations, output_path):
         cropped = image[new_top:new_bottom, new_left:new_right]
 
     else:
-        # No faces: center crop at least 50% of image area
         min_area = orig_area * 0.5
         target_side = int(min_area ** 0.5)
         target_side = min(target_side, height, width)
@@ -81,16 +79,13 @@ def draw_rectangles_and_save(image_path, face_locations, output_path):
 
         cropped = image[new_top:new_bottom, new_left:new_right]
 
-    # Resize to 512x512
     output_image = cv2.resize(cropped, (512, 512))
     cv2.imwrite(output_path, output_image)
 
-
-
 def main():
-    load_folder = 'auto-crop-face\load'
-    output_folder = 'auto-crop-face\output'
-    failed_folder = 'auto-crop-face\failed'
+    load_folder = 'auto-crop-face\\load'
+    output_folder = 'auto-crop-face\\output'
+    failed_folder = 'auto-crop-face\\failed'
 
     for filename in os.listdir(load_folder):
         if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
