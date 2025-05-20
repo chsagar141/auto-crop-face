@@ -88,9 +88,9 @@ def draw_rectangles_and_save(image_path, face_locations, output_path):
 
 
 def main():
-    load_folder = 'load'
-    output_folder = 'output'
-    failed_folder = 'failed'
+    load_folder = 'auto-crop-face\load'
+    output_folder = 'auto-crop-face\output'
+    failed_folder = 'auto-crop-face\failed'
 
     for filename in os.listdir(load_folder):
         if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
